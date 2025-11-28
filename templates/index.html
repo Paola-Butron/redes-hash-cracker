@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hash Generator & Cracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .tab {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-color: white;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            margin: 0 auto;
+            display: none;
+        }
+        
+        .container.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h2 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border 0.3s;
+            font-family: inherit;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .checkbox-item input {
+            margin-right: 5px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+        
+        .result.info {
+            background: #cce5ff;
+            border: 2px solid #004085;
+            color: #004085;
+        }
+        
+        .result-title {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        
+        .result-details {
+            margin-top: 10px;
+            font-size: 0.95em;
+        }
+        
+        .hash-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            border: 2px solid #dee2e6;
+            margin: 10px 0;
+            position: relative;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 15px;
+            font-size: 0.8em;
+            width: auto;
+            background: #667eea;
+        }
+        
+        .copy-btn:hover {
+            background: #5568d3;
+        }
+        
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .timestamp-box {
+            background: #f0f0f0;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .timestamp-box strong {
+            color: #333;
+        }
+
+        small {
+            color: #666;
+            font-size: 0.85em;
+        }
+        
+        .transfer-section {
+            background: #f8f9fa;
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .transfer-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .transfer-btn {
+            background: #28a745;
+            margin-top: 10px;
+        }
+        
+        .transfer-btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+    <h1>🔐 Hash Tool Suite</h1>
+    <p>Genera y crackea hashes MD5, SHA-256 y SHA-512</p>
+</div>
+
+<div class="tabs">
+    <div class="tab active" onclick="switchTab('generator')">
+        🔨 Generador de Hash
+    </div>
+    <div class="tab" onclick="switchTab('cracker')">
+        🔓 Cracker de Hash
+    </div>
+</div>
+
+<!-- GENERADOR DE HASH -->
+<div id="generator" class="container active">
+    <h2>🔨 Generador de Hash</h2>
+    <p class="subtitle">Convierte texto en hash MD5, SHA-256 o SHA-512</p>
+
+    <div class="info-box">
+        ℹ️ Ingresa cualquier texto y genera su hash. Ahora también puedes generar el hash SHA-512 con timestamp.
+    </div>
+
+    <form id="generatorForm">
+        <div class="form-group">
+            <label for="genAlgoritmo">Algoritmo de Hash:</label>
+            <select id="genAlgoritmo" name="algoritmo" required>
+                <option value="md5">MD5</option>
+                <option value="sha256">SHA-256</option>
+                <option value="sha512">SHA-512</option> <!-- NUEVO -->
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="textoOriginal">Texto a hashear:</label>
+            <textarea id="textoOriginal" name="texto" 
+                    placeholder="Ej: hola, password123, abc..." required></textarea>
+            <small>💡 Sugerencia: Prueba con palabras cortas (3-5 caracteres) para poder crackearlas fácilmente</small>
+        </div>
+
+        <div class="form-group" style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 2px solid #dee2e6;">
+            <label style="display: flex; align-items: center; cursor: pointer;">
+                <input type="checkbox" id="incluirTimestamp" name="incluirTimestamp" style="width: auto; margin-right: 10px;">
+                <span style="font-weight: 600;">⏰ Generar también hash con timestamp</span>
+            </label>
+            <small style="display: block; margin-top: 10px; margin-left: 30px; color: #666;">
+                Agrega la fecha y hora actual al texto (formato: <code>texto_2025-11-19 14:30:45</code>) y genera un hash extra.
+            </small>
+        </div>
+
+        <!-- NUEVA SECCIÓN SHA512-TIMESTAMP -->
+        <div id="sha512TimestampSection" class="transfer-section" style="display: none;">
+            <h3>🔍 Hash SHA-512 con Timestamp</h3>
+            <p>Este es el hash SHA-512 generado con timestamp:</p>
+
+            <div class="hash-display" id="sha512TimestampHash"></div>
+            <button type="button" class="copy-btn" onclick="copiarSHA512()">Copiar</button>
+        </div>
+        <!-- FIN DE NUEVA SECCIÓN -->
+
+        <button type="submit" id="genSubmitBtn">🚀 Generar Hash</button>
+    </form>
+
+    <div class="result info" id="genResult" style="display: none;">
+        <div class="result-title">✅ Hash Generado</div>
+        <div class="result-details" id="genResultDetails"></div>
+    </div>
+</div>
+
+<!-- CRACKER DE HASH -->
+<div id="cracker" class="container">
+    <h2>🔓 Cracker de Hash</h2>
+    <p class="subtitle">Fuerza bruta para descifrar hashes MD5, SHA-256 o SHA-512</p>
+
+    <div class="warning-box">
+        ⚠️ <strong>Advertencia:</strong> Este proceso puede tardar según la longitud y el charset seleccionado.
+    </div>
+
+    <form id="crackerForm">
+        <div class="form-group">
+            <label for="algoritmo">Algoritmo de Hash:</label>
+            <select id="algoritmo" name="algoritmo" required>
+                <option value="md5">MD5</option>
+                <option value="sha256">SHA-256</option>
+                <option value="sha512">SHA-512</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="hash">Hash objetivo:</label>
+            <input type="text" id="hash" name="hash" 
+                    placeholder="Ej: 5d41402abc4b2a76b9719d911017c592" required>
+            <small>💡 Puedes pegar aquí un hash generado en la otra pestaña</small>
+        </div>
+
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="multinucleo" name="multinucleo" checked>
+                Usar procesamiento multinúcleo (más rápido)
+            </label>
+            <small id="coresInfo" style="display: block; margin-top: 5px;"></small>
+        </div>
+
+        <div class="form-group">
+            <label for="maxLen">Longitud máxima:</label>
+            <input type="number" id="maxLen" name="maxLen" 
+                    min="1" value="4" required>
+            <small>⚠️ Longitudes mayores a 6 pueden tardar mucho tiempo</small>
+        </div>
+
+        <div class="form-group">
+            <label>Conjunto de caracteres:</label>
+            <div class="checkbox-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="lowercase" name="charset" value="lowercase" checked>
+                    <label for="lowercase" style="margin: 0;">Minúsculas (a-z)</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="uppercase" name="charset" value="uppercase">
+                    <label for="uppercase" style="margin: 0;">Mayúsculas (A-Z)</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="digits" name="charset" value="digits">
+                    <label for="digits" style="margin: 0;">Números (0-9)</label>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" id="submitBtn">🚀 Iniciar Búsqueda</button>
+    </form>
+
+    <div class="loader" id="loader"></div>
+
+    <div class="result" id="result"></div>
+</div>
+
+    
+    <script>
+        let lastGeneratedHash = null;
+        let lastAlgorithm = null;
+        
+        // Mostrar número de núcleos disponibles
+        fetch('/').then(() => {
+            const cores = navigator.hardwareConcurrency || 'desconocido';
+            document.getElementById('coresInfo').textContent = 
+                `Tu sistema tiene ${cores} núcleos lógicos disponibles`;
+        });
+        
+        // Función para cambiar de pestaña
+        function switchTab(tabName) {
+            // Cambiar tabs activas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Cambiar contenedores activos
+            document.querySelectorAll('.container').forEach(container => {
+                container.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+        }
+        
+        // Función para copiar al portapapeles
+        function copyToClipboard(text, btnElement) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = btnElement.textContent;
+                btnElement.textContent = '✓ Copiado';
+                setTimeout(() => {
+                    btnElement.textContent = originalText;
+                }, 2000);
+            });
+        }
+        
+        // Función para enviar hash al cracker
+        function sendToCracker(hash, algorithm) {
+            // Cambiar a la pestaña del cracker
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab')[1].classList.add('active');
+            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            document.getElementById('cracker').classList.add('active');
+            
+            // Rellenar el formulario
+            document.getElementById('hash').value = hash;
+            document.getElementById('algoritmo').value = algorithm;
+            
+            // Scroll suave al inicio
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // GENERADOR DE HASH
+        document.getElementById('generatorForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('genSubmitBtn');
+            const resultDiv = document.getElementById('genResult');
+            const resultDetails = document.getElementById('genResultDetails');
+            
+            const texto = document.getElementById('textoOriginal').value;
+            const algoritmo = document.getElementById('genAlgoritmo').value;
+            const incluirTimestamp = document.getElementById('incluirTimestamp').checked;
+            
+            console.log('Incluir timestamp:', incluirTimestamp); // Debug
+            
+            submitBtn.disabled = true;
+            resultDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/generar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        texto: texto,
+                        algoritmo: algoritmo,
+                        incluir_timestamp: incluirTimestamp
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Respuesta del servidor:', data); // Debug
+                
+                if (response.ok) {
+                    lastGeneratedHash = data.hash;
+                    lastAlgorithm = algoritmo;
+                    
+                    let htmlContent = `
+                        <strong>📝 Texto original:</strong> <span style="font-family: monospace; background: #fff3cd; padding: 2px 8px; border-radius: 4px;">${data.texto}</span><br>
+                        <strong>🔐 Algoritmo:</strong> ${data.algoritmo}<br>
+                        <strong>⏰ Generado:</strong> ${data.timestamp}<br><br>
+                        
+                        <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #2196F3;">
+                            <strong style="color: #004085; font-size: 1.1em;">🔒 Hash Normal</strong>
+                            <p style="margin: 5px 0; font-size: 0.85em; color: #666;">
+                                Hash del texto: <code>${data.texto}</code>
+                            </p>
+                            <p style="margin: 5px 0; font-size: 0.85em; color: #666;">
+                                <strong>Longitud:</strong> ${data.longitud} caracteres
+                            </p>
+                            <div class="hash-display" style="margin-top: 10px; position: relative;">
+                                ${data.hash}
+                                <button class="copy-btn" onclick="copyToClipboard('${data.hash}', this)">📋 Copiar</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Si se generó hash con timestamp, mostrarlo
+                    if (data.incluir_timestamp && data.hash_con_timestamp) {
+                        console.log('Mostrando hash con timestamp'); // Debug
+                        htmlContent += `
+                            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #ffc107;">
+                                <strong style="color: #856404; font-size: 1.1em;">⏰ Hash con Timestamp</strong>
+                                <p style="margin: 10px 0 5px 0; font-size: 0.9em;">
+                                    <strong>Texto completo usado:</strong><br>
+                                    <span style="font-family: monospace; background: white; padding: 4px 10px; border-radius: 4px; display: inline-block; margin-top: 5px;">${data.texto_con_timestamp}</span>
+                                </p>
+                                <p style="margin: 5px 0; font-size: 0.85em; color: #666;">
+                                    <strong>Longitud:</strong> ${data.hash_con_timestamp.length} caracteres
+                                </p>
+                                <div class="hash-display" style="margin-top: 10px; position: relative;">
+                                    ${data.hash_con_timestamp}
+                                    <button class="copy-btn" onclick="copyToClipboard('${data.hash_con_timestamp}', this)">📋 Copiar</button>
+                                </div>
+                                <div style="background: rgba(133, 100, 4, 0.1); padding: 10px; border-radius: 5px; margin-top: 10px;">
+                                    <small style="color: #856404;">
+                                        <strong>ℹ️ Nota de seguridad:</strong> Este hash incluye la fecha y hora exacta de generación, haciéndolo único y prácticamente imposible de crackear mediante fuerza bruta debido a la complejidad adicional del timestamp.
+                                    </small>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        console.log('No se generó hash con timestamp o no está marcado'); // Debug
+                    }
+                    
+                    htmlContent += `
+                        <div class="transfer-section">
+                            <h3>🔓 ¿Quieres probar el hash normal?</h3>
+                            <p>Envía el hash normal al cracker para intentar recuperar la contraseña original</p>
+                            <button class="transfer-btn" onclick="sendToCracker('${data.hash}', '${algoritmo}')">
+                                ➡️ Enviar Hash Normal al Cracker
+                            </button>
+                        </div>
+                    `;
+                    
+                    resultDiv.style.display = 'block';
+                    resultDiv.className = 'result info';
+                    resultDetails.innerHTML = htmlContent;
+                } else {
+                    throw new Error(data.error || 'Error al generar hash');
+                }
+            } catch (error) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDetails.innerHTML = `
+                    <div class="result-title">⚠️ Error</div>
+                    ${error.message}
+                `;
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+        
+        // CRACKER DE HASH
+        document.getElementById('crackerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const loader = document.getElementById('loader');
+            const resultDiv = document.getElementById('result');
+            
+            const hash = document.getElementById('hash').value.trim();
+            const maxLen = parseInt(document.getElementById('maxLen').value);
+            const algoritmo = document.getElementById('algoritmo').value;
+            const multinucleo = document.getElementById('multinucleo').checked;
+            
+            const charsetChecks = document.querySelectorAll('input[name="charset"]:checked');
+            const charsetValues = Array.from(charsetChecks).map(cb => cb.value);
+            
+            if (charsetValues.length === 0) {
+                alert('Selecciona al menos un conjunto de caracteres');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            loader.style.display = 'block';
+            resultDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/crack', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        hash: hash,
+                        maxLen: maxLen,
+                        charset: charsetValues,
+                        algoritmo: algoritmo,
+                        multinucleo: multinucleo,
+                        num_cores: multinucleo ? navigator.hardwareConcurrency : 1
+
+                        
+                    })
+                });
+                
+                const data = await response.json();
+                
+                resultDiv.style.display = 'block';
+                
+                if (data.encontrado) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <div class="result-title">✅ ¡Contraseña encontrada!</div>
+                        <div class="result-details">
+                            <strong>Algoritmo:</strong> ${data.algoritmo}<br>
+                            <strong>Modo:</strong> ${data.modo}<br>
+                            <strong>Texto original:</strong> <span style="font-family: monospace; background: #fff3cd; padding: 2px 8px; border-radius: 4px;">${data.texto}</span><br>
+                            <strong>Intentos:</strong> ${data.intentos.toLocaleString()}<br>
+                            <strong>Tiempo:</strong> ${data.tiempo.toFixed(2)} segundos<br>
+                            <div class="timestamp-box">
+                                <strong>⏰ Timestamps:</strong><br>
+                                🟢 Inicio: ${data.timestamp_inicio}<br>
+                                🔴 Fin: ${data.timestamp_fin}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <div class="result-title">❌ No encontrado</div>
+                        <div class="result-details">
+                            <strong>Algoritmo:</strong> ${data.algoritmo}<br>
+                            <strong>Modo:</strong> ${data.modo}<br>
+                            <strong>Intentos realizados:</strong> ${data.intentos.toLocaleString()}<br>
+                            <strong>Tiempo:</strong> ${data.tiempo.toFixed(2)} segundos<br>
+                            <div class="timestamp-box">
+                                <strong>⏰ Timestamps:</strong><br>
+                                🟢 Inicio: ${data.timestamp_inicio}<br>
+                                🔴 Fin: ${data.timestamp_fin}
+                            </div>
+                            <br>
+                            💡 Prueba aumentando la longitud máxima o el charset.
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <div class="result-title">⚠️ Error</div>
+                    <div class="result-details">
+                        ${error.message}
+                    </div>
+                `;
+            } finally {
+                submitBtn.disabled = false;
+                loader.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
+!-- hola
